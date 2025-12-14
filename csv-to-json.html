@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV to JSON Converter - Marketplace Data Tool</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 {
+      color: #667eea;
+      margin-bottom: 0.5rem;
+      font-size: 2rem;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 2rem;
+    }
+    .section {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: #f8f9fa;
+      border-radius: 0.5rem;
+    }
+    .section h2 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      color: #333;
+    }
+    input[type="file"] {
+      display: block;
+      margin: 1rem 0;
+      padding: 0.75rem;
+      border: 2px dashed #667eea;
+      border-radius: 0.5rem;
+      width: 100%;
+      cursor: pointer;
+    }
+    button {
+      background: #667eea;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      margin-right: 0.5rem;
+      transition: all 0.2s;
+    }
+    button:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+    }
+    button:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .output {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      max-height: 400px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 0.875rem;
+      line-height: 1.5;
+    }
+    .success {
+      color: #10b981;
+      font-weight: 600;
+      margin: 1rem 0;
+    }
+    .error {
+      color: #ef4444;
+      font-weight: 600;
+      margin: 1rem 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    th, td {
+      text-align: left;
+      padding: 0.75rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    th {
+      background: #667eea;
+      color: white;
+      font-weight: 600;
+    }
+    code {
+      background: #f3f4f6;
+      padding: 0.125rem 0.25rem;
+      border-radius: 0.25rem;
+      font-family: monospace;
+      font-size: 0.875rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🛍️ Marketplace CSV → JSON Converter</h1>
+    <p class="subtitle">Convert your item spreadsheet to JSON format for your marketplace app</p>
+
+    <!-- CSV Template Section -->
+    <div class="section">
+      <h2>📋 Step 1: CSV Template</h2>
+      <p>Your CSV must have these columns in this exact order:</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Column</th>
+            <th>Required?</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>✅ Yes</td><td>BF-001, CL-042</td></tr>
+          <tr><td><code>status</code></td><td>✅ Yes</td><td>available, sold, pending</td></tr>
+          <tr><td><code>dateAdded</code></td><td>✅ Yes</td><td>2024-12-14</td></tr>
+          <tr><td><code>name_en</code></td><td>✅ Yes</td><td>Herman Miller Chair</td></tr>
+          <tr><td><code>name_es</code></td><td>✅ Yes</td><td>Silla Herman Miller</td></tr>
+          <tr><td><code>description_en</code></td><td>✅ Yes</td><td>Comfortable office chair...</td></tr>
+          <tr><td><code>description_es</code></td><td>✅ Yes</td><td>Silla de oficina cómoda...</td></tr>
+          <tr><td><code>brand</code></td><td>⚠️ Optional</td><td>Herman Miller</td></tr>
+          <tr><td><code>category</code></td><td>✅ Yes</td><td>furniture, clothing, electronics...</td></tr>
+          <tr><td><code>condition</code></td><td>✅ Yes</td><td>new, used</td></tr>
+          <tr><td><code>color_en</code></td><td>⚠️ Optional</td><td>Black</td></tr>
+          <tr><td><code>color_es</code></td><td>⚠️ Optional</td><td>Negro</td></tr>
+          <tr><td><code>dimensions</code></td><td>⚠️ Optional</td><td>H: 90cm L: 65cm or Size M</td></tr>
+          <tr><td><code>retailPrice</code></td><td>⚠️ Optional</td><td>18000</td></tr>
+          <tr><td><code>askPrice</code></td><td>✅ Yes</td><td>8500</td></tr>
+          <tr><td><code>photo1</code></td><td>✅ Yes</td><td>images/BF-001/main.jpg</td></tr>
+          <tr><td><code>photo2-5</code></td><td>⚠️ Optional</td><td>images/BF-001/side.jpg</td></tr>
+          <tr><td><code>retailPhoto</code></td><td>⚠️ Optional</td><td>images/BF-001/retail.jpg</td></tr>
+          <tr><td><code>retailLink</code></td><td>⚠️ Optional</td><td>https://store.com/product</td></tr>
+          <tr><td><code>seller</code></td><td>✅ Yes</td><td>Bri</td></tr>
+          <tr><td><code>whatsappNumber</code></td><td>✅ Yes</td><td>+525512345678</td></tr>
+          <tr><td><code>negotiable</code></td><td>✅ Yes</td><td>true, false</td></tr>
+        </tbody>
+      </table>
+      <button onclick="downloadTemplate()" style="margin-top: 1rem;">⬇️ Download CSV Template</button>
+    </div>
+
+    <!-- Upload Section -->
+    <div class="section">
+      <h2>📤 Step 2: Upload Your CSV</h2>
+      <input type="file" id="csvFile" accept=".csv" onchange="handleFile()">
+      <div id="status"></div>
+    </div>
+
+    <!-- Output Section -->
+    <div class="section">
+      <h2>✨ Step 3: Get Your JSON</h2>
+      <button id="copyBtn" onclick="copyJSON()" disabled>📋 Copy JSON</button>
+      <button id="downloadBtn" onclick="downloadJSON()" disabled>⬇️ Download JSON</button>
+      <div id="output" class="output" style="margin-top: 1rem;"></div>
+    </div>
+  </div>
+
+  <script>
+    let generatedJSON = '';
+
+    function downloadTemplate() {
+      const template = `id,status,dateAdded,name_en,name_es,description_en,description_es,brand,category,condition,color_en,color_es,dimensions,retailPrice,askPrice,photo1,photo2,photo3,photo4,photo5,retailPhoto,retailLink,seller,whatsappNumber,negotiable
+BF-001,available,2024-12-14,Herman Miller Aeron Chair,Silla Herman Miller Aeron,Ergonomic office chair in excellent condition,Silla ergonómica de oficina en excelente condición,Herman Miller,furniture,used,Black,Negro,H: 90cm L: 65cm,18000,8500,images/BF-001/photo1.jpg,images/BF-001/photo2.jpg,,,,,https://www.hermanmiller.com,Bri,+525512345678,false`;
+      
+      const blob = new Blob([template], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'marketplace-template.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function handleFile() {
+      const file = document.getElementById('csvFile').files[0];
+      if (!file) return;
+
+      const status = document.getElementById('status');
+      status.innerHTML = '<p style="color: #667eea;">⏳ Processing CSV...</p>';
+
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: function(results) {
+          try {
+            const items = results.data.map(row => {
+              // Calculate discount if retail price exists
+              let discountPercent = undefined;
+              if (row.retailPrice && row.askPrice) {
+                const retail = parseFloat(row.retailPrice);
+                const ask = parseFloat(row.askPrice);
+                discountPercent = Math.round(((retail - ask) / retail) * 100);
+              }
+
+              // Collect photos (photo1 is required, 2-5 optional)
+              const photos = [row.photo1];
+              if (row.photo2) photos.push(row.photo2);
+              if (row.photo3) photos.push(row.photo3);
+              if (row.photo4) photos.push(row.photo4);
+              if (row.photo5) photos.push(row.photo5);
+
+              return {
+                id: row.id,
+                status: row.status,
+                dateAdded: row.dateAdded,
+                name: {
+                  en: row.name_en,
+                  es: row.name_es
+                },
+                description: {
+                  en: row.description_en,
+                  es: row.description_es
+                },
+                brand: row.brand || undefined,
+                category: row.category,
+                condition: row.condition,
+                color: (row.color_en && row.color_es) ? {
+                  en: row.color_en,
+                  es: row.color_es
+                } : undefined,
+                dimensions: row.dimensions || undefined,
+                retailPrice: row.retailPrice ? parseFloat(row.retailPrice) : undefined,
+                askPrice: parseFloat(row.askPrice),
+                discountPercent: discountPercent,
+                photos: photos,
+                retailPhoto: row.retailPhoto || undefined,
+                retailLink: row.retailLink || undefined,
+                seller: row.seller,
+                whatsappNumber: row.whatsappNumber,
+                negotiable: row.negotiable === 'true'
+              };
+            });
+
+            generatedJSON = JSON.stringify(items, null, 2);
+            document.getElementById('output').textContent = generatedJSON;
+            document.getElementById('copyBtn').disabled = false;
+            document.getElementById('downloadBtn').disabled = false;
+            status.innerHTML = `<p class="success">✅ Success! Converted ${items.length} items</p>`;
+          } catch (error) {
+            status.innerHTML = `<p class="error">❌ Error: ${error.message}</p>`;
+          }
+        },
+        error: function(error) {
+          status.innerHTML = `<p class="error">❌ Error parsing CSV: ${error.message}</p>`;
+        }
+      });
+    }
+
+    function copyJSON() {
+      navigator.clipboard.writeText(generatedJSON).then(() => {
+        const btn = document.getElementById('copyBtn');
+        btn.textContent = '✅ Copied!';
+        setTimeout(() => {
+          btn.textContent = '📋 Copy JSON';
+        }, 2000);
+      });
+    }
+
+    function downloadJSON() {
+      const blob = new Blob([generatedJSON], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'items.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

@@ -17,5 +17,5 @@ export default defineConfig({
     port: 3000,
     open: true,
   },
-  base: '/', // Change to '/your-repo-name/' for GitHub Pages
+  base: '/marketplace2025', // Change to '/your-repo-name/' for GitHub Pages
 });
